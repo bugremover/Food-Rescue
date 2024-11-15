@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String?
+  role          UserRole  @default(VOLUNTEER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  business      Business? @relation(fields: [businessId], references: [id])
+  businessId    String?
+  donations     Donation[] @relation("Donor")
+  claims        Donation[] @relation("Claimer")
+}
+
+model Business {
+  id          String    @id @default(cuid())
+  name        String
+  address     String
+  latitude    Float
+  longitude   Float
+  users       User[]
+  donations   Donation[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Donation {
+  id          String    @id @default(cuid())
+  type        String
+  quantity    String
+  expiry      DateTime
+  status      DonationStatus @default(AVAILABLE)
+  notes       String?
+  business    Business  @relation(fields: [businessId], references: [id])
+  businessId  String
+  donor       User      @relation("Donor", fields: [donorId], references: [id])
+  donorId     String
+  claimer     User?     @relation("Claimer", fields: [claimerId], references: [id])
+  claimerId   String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+enum UserRole {
+  BUSINESS_ADMIN
+  BUSINESS_STAFF
+  VOLUNTEER
+}
+
+enum DonationStatus {
+  AVAILABLE
+  CLAIMED
+  COMPLETED
+  EXPIRED
+}
